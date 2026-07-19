@@ -1,0 +1,16 @@
+name: 🔍 Lacuna ou risco
+description: Registrar uma lacuna de informação, risco ou ponto sensível encontrado na condução
+labels: ["gap", "needs-triage"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: O que foi encontrado?
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impacto se não for resolvido
+    validations:
+      required: false

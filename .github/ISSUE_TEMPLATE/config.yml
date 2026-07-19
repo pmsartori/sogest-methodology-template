@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📋 Como conduzimos
+    url: https://github.com/pmsartori/[SLUG_PROJETO]/blob/main/docs/PROJECT.md
+    about: A estrutura de módulos, epics, sprints, board e o método de condução.

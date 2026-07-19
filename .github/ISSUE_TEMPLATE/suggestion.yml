@@ -1,0 +1,16 @@
+name: 💡 Sugestão de frente
+description: Propor uma frente de trabalho nova — cai em Triage
+labels: ["needs-triage", "suggestion"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Que problema isso resolve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+    validations:
+      required: false
