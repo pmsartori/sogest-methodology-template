@@ -1,4 +1,3 @@
-const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, HeadingLevel, ShadingType } = require('docx');
 const fs = require('fs');
 const path = require('path');
 
@@ -25,30 +24,38 @@ function classifyLine(line) {
   return { type: 'paragraph', text: trimmed };
 }
 
-function headingParagraph(text, level) {
-  const headingLevel = { 1: HeadingLevel.HEADING_1, 2: HeadingLevel.HEADING_2, 3: HeadingLevel.HEADING_3 }[level];
-  return new Paragraph({ heading: headingLevel, spacing: { before: 300, after: 100 }, children: [new TextRun({ text, bold: true, color: PRIMARY })] });
-}
+// buildDocChildren converts markdown into docx document children. It needs the
+// docx package's constructors to do so, but does NOT require('docx') at module
+// scope: callers either pass the already-required docx module in (as exportDocx
+// does), or, if called standalone, it lazily requires docx itself at call time.
+// This keeps classifyLine (and importing this file at all) free of any
+// dependency on the docx package being installed.
+function buildDocChildren(markdown, docx) {
+  const { Paragraph, TextRun, Table, TableRow, TableCell, WidthType, HeadingLevel, ShadingType } = docx || require('docx');
 
-function paraParagraph(text) {
-  return new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text, size: 22 })] });
-}
+  function headingParagraph(text, level) {
+    const headingLevel = { 1: HeadingLevel.HEADING_1, 2: HeadingLevel.HEADING_2, 3: HeadingLevel.HEADING_3 }[level];
+    return new Paragraph({ heading: headingLevel, spacing: { before: 300, after: 100 }, children: [new TextRun({ text, bold: true, color: PRIMARY })] });
+  }
 
-function bulletParagraph(text) {
-  return new Paragraph({ bullet: { level: 0 }, spacing: { after: 60 }, children: [new TextRun({ text, size: 22 })] });
-}
+  function paraParagraph(text) {
+    return new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text, size: 22 })] });
+  }
 
-function tableRowEl(cells, isHeader) {
-  return new TableRow({
-    children: cells.map(text => new TableCell({
-      width: { size: 100 / cells.length, type: WidthType.PERCENTAGE },
-      shading: isHeader ? { type: ShadingType.SOLID, color: PRIMARY } : undefined,
-      children: [new Paragraph({ children: [new TextRun({ text, size: 20, bold: isHeader, color: isHeader ? WHITE : "333333" })] })]
-    }))
-  });
-}
+  function bulletParagraph(text) {
+    return new Paragraph({ bullet: { level: 0 }, spacing: { after: 60 }, children: [new TextRun({ text, size: 22 })] });
+  }
 
-function buildDocChildren(markdown) {
+  function tableRowEl(cells, isHeader) {
+    return new TableRow({
+      children: cells.map(text => new TableCell({
+        width: { size: 100 / cells.length, type: WidthType.PERCENTAGE },
+        shading: isHeader ? { type: ShadingType.SOLID, color: PRIMARY } : undefined,
+        children: [new Paragraph({ children: [new TextRun({ text, size: 20, bold: isHeader, color: isHeader ? WHITE : "333333" })] })]
+      }))
+    });
+  }
+
   const lines = markdown.split('\n');
   const children = [];
   let tableRows = null;
@@ -81,10 +88,12 @@ function buildDocChildren(markdown) {
 }
 
 async function exportDocx(mdPath) {
+  const docx = require('docx');
+  const { Document, Packer } = docx;
   const markdown = fs.readFileSync(mdPath, 'utf-8');
   const doc = new Document({
     styles: { default: { document: { run: { font: "Calibri", size: 22 } } } },
-    sections: [{ properties: { page: { margin: { top: 1000, bottom: 1000, left: 1200, right: 1200 } } }, children: buildDocChildren(markdown) }]
+    sections: [{ properties: { page: { margin: { top: 1000, bottom: 1000, left: 1200, right: 1200 } } }, children: buildDocChildren(markdown, docx) }]
   });
   const buffer = await Packer.toBuffer(doc);
   const outPath = mdPath.replace(/\.md$/, '.docx');
