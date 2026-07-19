@@ -1,0 +1,8 @@
+{
+  "name": "sogest-methodology-template",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "docx": "^9.0.0"
+  }
+}
